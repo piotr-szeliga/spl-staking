@@ -1,14 +1,15 @@
 [features]
 seeds = false
 skip-lint = false
-[programs.devnet]
+[programs.mainnet]
 spl_staking = "9GAsSHWvHoHoqbk8tqHYCq3fcpyGmovgXD5GBkSo4p3f"
+emperor_staking = "DVTouieqqLknDQn2UPE87HvWVizMkVj1Q4rqDgjNFYpK"
 
 [registry]
 url = "https://api.apr.dev"
 
 [provider]
-cluster = "devnet"
+cluster = "mainnet"
 wallet = "/home/work/.config/solana/id.json"
 
 [scripts]

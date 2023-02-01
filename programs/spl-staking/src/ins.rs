@@ -2,9 +2,12 @@ use crate::state::*;
 use anchor_lang::prelude::*;
 use anchor_spl::{
     associated_token::AssociatedToken,
-    // mint::USDC,
+    mint::USDC,
     token::{Mint, Token, TokenAccount},
 };
+use emperor_staking::program::EmperorStaking;
+
+
 
 #[derive(Accounts)]
 #[instruction(bump: u8)]
@@ -93,7 +96,7 @@ pub struct Fund<'info> {
     )]
     pub token_vault: SystemAccount<'info>,
 
-    #[account(address = "Gh9ZwEmdLJ8DscKNTkTqPbNwLNNBjuSzaG9Vp2KGtKJr".parse::<Pubkey>().unwrap())]
+    #[account(address = USDC)]
     pub usdc_mint: Account<'info, Mint>,
 
     #[account(
@@ -139,14 +142,14 @@ pub struct Withdraw<'info> {
     #[account(
         mut,
         associated_token::authority = authority,
-        associated_token::mint = "Gh9ZwEmdLJ8DscKNTkTqPbNwLNNBjuSzaG9Vp2KGtKJr".parse::<Pubkey>().unwrap(),
+        associated_token::mint = USDC,
     )]
     pub authority_ata: Account<'info, TokenAccount>,
 
     #[account(
         mut,
         associated_token::authority = token_vault,
-        associated_token::mint = "Gh9ZwEmdLJ8DscKNTkTqPbNwLNNBjuSzaG9Vp2KGtKJr".parse::<Pubkey>().unwrap(),
+        associated_token::mint = USDC,
     )]
     pub vault_ata: Account<'info, TokenAccount>,
 
@@ -184,6 +187,65 @@ pub struct Stake<'info> {
     pub vault_ata: Account<'info, TokenAccount>,
 
     pub token_program: Program<'info, Token>,
+}
+
+#[derive(Accounts)]
+pub struct StakeWithClaim<'info> {
+    #[account(mut)]
+    pub staker: Signer<'info>,
+
+    /// CHECK:
+    #[account(mut)]
+    pub staker_account: AccountInfo<'info>,
+
+    /// CHECK:
+    #[account(mut)]
+    pub emperor_vault: AccountInfo<'info>,
+
+    #[account(address = vault.load()?.stake_token_mint)]
+    pub stake_token_mint: Account<'info, Mint>,    
+
+    #[account(
+        mut,
+        associated_token::mint = stake_token_mint,
+        associated_token::authority = emperor_vault,
+    )]
+    pub reward_token_vault_ata: Account<'info, TokenAccount>,
+
+    #[account(mut)]
+    pub vault: AccountLoader<'info, Vault>,
+
+    #[account(
+        seeds = [
+            b"vault".as_ref(),
+        ],
+        bump = vault.load()?.bump,
+    )]
+    pub token_vault: SystemAccount<'info>,
+
+    #[account(
+        mut,
+        associated_token::authority = staker,
+        associated_token::mint = stake_token_mint,
+    )]
+    pub staker_ata: Account<'info, TokenAccount>,
+
+    #[account(
+        mut,
+        associated_token::authority = token_vault,
+        associated_token::mint = stake_token_mint,
+    )]
+    pub vault_ata: Account<'info, TokenAccount>,
+
+    pub emperor_program: Program<'info, EmperorStaking>,
+
+    pub system_program: Program<'info, System>,
+
+    pub token_program: Program<'info, Token>,
+
+    pub associated_token_program: Program<'info, AssociatedToken>,
+
+    pub rent: Sysvar<'info, Rent>,
 }
 
 #[derive(Accounts)]
@@ -235,7 +297,7 @@ pub struct Claim<'info> {
     )]
     pub token_vault: SystemAccount<'info>,
 
-    #[account(address = "Gh9ZwEmdLJ8DscKNTkTqPbNwLNNBjuSzaG9Vp2KGtKJr".parse::<Pubkey>().unwrap())]
+    #[account(address = USDC)]
     pub usdc_mint: Account<'info, Mint>,
 
     #[account(

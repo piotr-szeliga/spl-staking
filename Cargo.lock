@@ -508,6 +508,18 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "90e5c1c8368803113bf0c9584fc495a58b86dc8a29edbf8fe877d21d9507e797"
 
 [[package]]
+name = "emperor-staking"
+version = "0.1.0"
+dependencies = [
+ "anchor-lang",
+ "anchor-spl",
+ "metaplex-token-metadata",
+ "mpl-token-metadata",
+ "solana-program",
+ "spl-token-metadata",
+]
+
+[[package]]
 name = "env_logger"
 version = "0.9.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1269,6 +1281,7 @@ version = "0.1.0"
 dependencies = [
  "anchor-lang",
  "anchor-spl",
+ "emperor-staking",
  "metaplex-token-metadata",
  "mpl-token-metadata",
  "solana-program",

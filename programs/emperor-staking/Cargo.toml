@@ -1,12 +1,12 @@
 [package]
-name = "spl-staking"
+name = "emperor-staking"
 version = "0.1.0"
 description = "Created with Anchor"
 edition = "2021"
 
 [lib]
 crate-type = ["cdylib", "lib"]
-name = "spl_staking"
+name = "emperor_staking"
 
 [features]
 no-entrypoint = []
@@ -22,4 +22,3 @@ anchor-spl = "0.24.1"
 spl-token-metadata = { version = "0.0.1", features = [ "no-entrypoint" ] }
 mpl-token-metadata = { version = "1.3.0", features = ["no-entrypoint"] }
 metaplex-token-metadata = { version = "0.0.1", features = ["no-entrypoint"] }
-emperor-staking = { path = "../emperor-staking", features = ["cpi"] }
