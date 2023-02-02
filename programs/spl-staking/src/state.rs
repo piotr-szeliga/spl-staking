@@ -56,12 +56,12 @@ impl Vault {
                 .daily_payout_amount
                 .checked_mul(staked_seconds)
                 .unwrap()
-                .checked_mul(self.users[i].staked_amount)
+                .checked_div(86400)
                 .unwrap()
                 .checked_div(self.total_staked_amount)
                 .unwrap()
-                .checked_div(86400)
-                .unwrap();
+                .checked_mul(self.users[i].staked_amount)
+                .unwrap();                
             self.users[i].earned_amount = self.users[i]
                 .earned_amount
                 .checked_add(earned_amount)
