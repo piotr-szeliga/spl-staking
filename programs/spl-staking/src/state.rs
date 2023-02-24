@@ -90,13 +90,8 @@ impl Vault {
             if self.users[i].key == key {
                 self.users[i].staked_amount =
                     self.users[i].staked_amount.checked_sub(amount).unwrap();
-                if self.users[i].staked_amount == 0 {
-                    self.users[i] = self.users[self.total_user_count as usize - 1];
-                    self.users[self.total_user_count as usize - 1] = User::default();
-                    self.total_user_count = self.total_user_count.checked_sub(1).unwrap();
-                    self.total_staked_amount =
-                        self.total_staked_amount.checked_sub(amount).unwrap();
-                }
+                self.total_staked_amount =
+                    self.total_staked_amount.checked_sub(amount).unwrap();
                 return;
             }
         }
