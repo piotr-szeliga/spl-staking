@@ -2,9 +2,7 @@
 seeds = false
 skip-lint = false
 [programs.mainnet]
-spl_staking = "9GAsSHWvHoHoqbk8tqHYCq3fcpyGmovgXD5GBkSo4p3f"
-emperor_staking = "DVTouieqqLknDQn2UPE87HvWVizMkVj1Q4rqDgjNFYpK"
-
+spl_staking = "GaJ7t7cq1oqVbpE5bBd7ptzuHHyFRjGZmjiZuFojAsgE"
 [registry]
 url = "https://api.apr.dev"
 
