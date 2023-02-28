@@ -51,20 +51,13 @@ impl Vault {
         }
 
         let staked_seconds = now.checked_sub(self.last_updated_time).unwrap();
+        let rate: f64 = self.daily_payout_amount as f64 * staked_seconds as f64 / 86400f64 / self.total_staked_amount as f64;
+
         for i in 0..self.total_user_count as usize {
-            let earned_amount = self
-                .daily_payout_amount
-                .checked_mul(staked_seconds)
-                .unwrap()
-                .checked_div(86400)
-                .unwrap()
-                .checked_div(self.total_staked_amount)
-                .unwrap()
-                .checked_mul(self.users[i].staked_amount)
-                .unwrap();                
+            let earned_amount: f64 = rate * self.users[i].staked_amount as f64;
             self.users[i].earned_amount = self.users[i]
                 .earned_amount
-                .checked_add(earned_amount)
+                .checked_add(earned_amount as u64)
                 .unwrap();
         }
         self.last_updated_time = now;
@@ -97,13 +90,8 @@ impl Vault {
             if self.users[i].key == key {
                 self.users[i].staked_amount =
                     self.users[i].staked_amount.checked_sub(amount).unwrap();
-                if self.users[i].staked_amount == 0 {
-                    self.users[i] = self.users[self.total_user_count as usize - 1];
-                    self.users[self.total_user_count as usize - 1] = User::default();
-                    self.total_user_count = self.total_user_count.checked_sub(1).unwrap();
-                    self.total_staked_amount =
-                        self.total_staked_amount.checked_sub(amount).unwrap();
-                }
+                self.total_staked_amount =
+                    self.total_staked_amount.checked_sub(amount).unwrap();
                 return;
             }
         }
@@ -141,4 +129,21 @@ impl Default for User {
             earned_amount: 0,
         }
     }
+}
+
+#[account]
+pub struct FeeVault {
+    pub fee_wallet: Pubkey,
+
+    pub stake_fee: u64,
+
+    pub unstake_fee: u64,
+
+    pub authority: Pubkey,
+    
+    pub bump: u8,
+}
+
+impl FeeVault {
+    pub const LEN: usize = std::mem::size_of::<FeeVault>();
 }

@@ -7,8 +7,6 @@ use anchor_spl::{
 };
 use emperor_staking::program::EmperorStaking;
 
-
-
 #[derive(Accounts)]
 #[instruction(bump: u8)]
 pub struct InitializeVault<'info> {
@@ -165,6 +163,20 @@ pub struct Stake<'info> {
     pub vault: AccountLoader<'info, Vault>,
 
     #[account(
+        mut,
+        seeds =[
+            b"fee-vault".as_ref(),
+            vault.key().as_ref(),
+        ],
+        bump = fee_vault.bump,
+
+    )]
+    pub fee_vault: Account<'info, FeeVault>,
+
+    #[account(mut, address = fee_vault.fee_wallet)]
+    pub fee_wallet: SystemAccount<'info>,
+
+    #[account(
         seeds = [
             b"vault".as_ref(),
         ],
@@ -185,6 +197,8 @@ pub struct Stake<'info> {
         associated_token::mint = vault.load()?.stake_token_mint,
     )]
     pub vault_ata: Account<'info, TokenAccount>,
+
+    pub system_program: Program<'info, System>,
 
     pub token_program: Program<'info, Token>,
 }
@@ -203,17 +217,31 @@ pub struct StakeWithClaim<'info> {
     pub emperor_vault: AccountInfo<'info>,
 
     #[account(address = vault.load()?.stake_token_mint)]
-    pub stake_token_mint: Account<'info, Mint>,    
+    pub stake_token_mint: Box<Account<'info, Mint>>,
 
     #[account(
         mut,
         associated_token::mint = stake_token_mint,
         associated_token::authority = emperor_vault,
     )]
-    pub reward_token_vault_ata: Account<'info, TokenAccount>,
+    pub reward_token_vault_ata: Box<Account<'info, TokenAccount>>,
 
     #[account(mut)]
     pub vault: AccountLoader<'info, Vault>,
+
+    #[account(
+        mut,
+        seeds =[
+            b"fee-vault".as_ref(),
+            vault.key().as_ref(),
+        ],
+        bump = fee_vault.bump,
+
+    )]
+    pub fee_vault: Box<Account<'info, FeeVault>>,
+
+    #[account(mut, address = fee_vault.fee_wallet)]
+    pub fee_wallet: SystemAccount<'info>,
 
     #[account(
         seeds = [
@@ -228,14 +256,14 @@ pub struct StakeWithClaim<'info> {
         associated_token::authority = staker,
         associated_token::mint = stake_token_mint,
     )]
-    pub staker_ata: Account<'info, TokenAccount>,
+    pub staker_ata: Box<Account<'info, TokenAccount>>,
 
     #[account(
         mut,
         associated_token::authority = token_vault,
         associated_token::mint = stake_token_mint,
     )]
-    pub vault_ata: Account<'info, TokenAccount>,
+    pub vault_ata: Box<Account<'info, TokenAccount>>,
 
     pub emperor_program: Program<'info, EmperorStaking>,
 
@@ -257,6 +285,20 @@ pub struct Unstake<'info> {
     pub vault: AccountLoader<'info, Vault>,
 
     #[account(
+        mut,
+        seeds =[
+            b"fee-vault".as_ref(),
+            vault.key().as_ref(),
+        ],
+        bump = fee_vault.bump,
+
+    )]
+    pub fee_vault: Account<'info, FeeVault>,
+
+    #[account(mut, address = fee_vault.fee_wallet)]
+    pub fee_wallet: SystemAccount<'info>,
+
+    #[account(
         seeds = [
             b"vault".as_ref(),
         ],
@@ -277,6 +319,8 @@ pub struct Unstake<'info> {
         associated_token::mint = vault.load()?.stake_token_mint,
     )]
     pub vault_ata: Account<'info, TokenAccount>,
+
+    pub system_program: Program<'info, System>,
 
     pub token_program: Program<'info, Token>,
 }
@@ -334,4 +378,48 @@ pub struct ClosePda<'info> {
     pub pda: AccountInfo<'info>,
 
     pub system_program: Program<'info, System>,
+}
+
+#[derive(Accounts)]
+pub struct InitializeFeeVault<'info> {
+    #[account(mut, address = vault.load()?.authority)]
+    pub authority: Signer<'info>,
+
+    #[account(mut)]
+    pub vault: AccountLoader<'info, Vault>,
+
+    #[account(
+        init,
+        space =  FeeVault::LEN + 8,
+        seeds =[
+            b"fee-vault".as_ref(),
+            vault.key().as_ref(),
+        ],
+        bump,
+        payer = authority,
+
+    )]
+    pub fee_vault: Account<'info, FeeVault>,
+
+    pub system_program: Program<'info, System>,
+}
+
+#[derive(Accounts)]
+pub struct UpdateFeeVault<'info> {
+    #[account(mut, address = vault.load()?.authority)]
+    pub authority: Signer<'info>,
+
+    #[account(mut)]
+    pub vault: AccountLoader<'info, Vault>,
+
+    #[account(
+        mut,
+        seeds =[
+            b"fee-vault".as_ref(),
+            vault.key().as_ref(),
+        ],
+        bump = fee_vault.bump,
+
+    )]
+    pub fee_vault: Account<'info, FeeVault>,
 }

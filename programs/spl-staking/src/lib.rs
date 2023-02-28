@@ -2,12 +2,9 @@ mod ins;
 mod state;
 
 use crate::ins::*;
-use anchor_lang::prelude::*;
+use anchor_lang::{prelude::*, system_program};
 use anchor_spl::token::{transfer, Transfer};
-use emperor_staking::cpi::{
-    accounts::{Claim as ClaimJewels},
-    claim as claim_jewels
-};
+use emperor_staking::cpi::{accounts::Claim as ClaimJewels, claim as claim_jewels};
 use emperor_staking::{self};
 
 declare_id!("9GAsSHWvHoHoqbk8tqHYCq3fcpyGmovgXD5GBkSo4p3f");
@@ -90,6 +87,20 @@ pub mod spl_staking {
 
     pub fn stake(ctx: Context<Stake>, amount: u64) -> Result<()> {
         let mut vault = ctx.accounts.vault.load_mut()?;
+        let stake_fee = ctx.accounts.fee_vault.stake_fee;
+
+        if stake_fee > 0 {
+            system_program::transfer(
+                CpiContext::new(
+                    ctx.accounts.system_program.to_account_info(),
+                    system_program::Transfer {
+                        from: ctx.accounts.staker.to_account_info(),
+                        to: ctx.accounts.fee_wallet.to_account_info(),
+                    },
+                ),
+                stake_fee,
+            )?;
+        }
 
         vault.stake(ctx.accounts.staker.key(), amount);
 
@@ -111,24 +122,38 @@ pub mod spl_staking {
     pub fn stake_with_claim(ctx: Context<StakeWithClaim>) -> Result<()> {
         let mut vault = ctx.accounts.vault.load_mut()?;
 
-        let amount = claim_jewels(
-            CpiContext::new(
-                ctx.accounts.emperor_program.to_account_info(), 
-                ClaimJewels {
-                    signer: ctx.accounts.staker.to_account_info(),
-                    staker: ctx.accounts.staker.to_account_info(),
-                    staker_account: ctx.accounts.staker_account.to_account_info(),
-                    vault: ctx.accounts.emperor_vault.to_account_info(),
-                    reward_token_mint: ctx.accounts.stake_token_mint.to_account_info(),
-                    staker_ata: ctx.accounts.staker_ata.to_account_info(),
-                    reward_token_vault_ata: ctx.accounts.reward_token_vault_ata.to_account_info(),
-                    system_program: ctx.accounts.system_program.to_account_info(),
-                    token_program: ctx.accounts.token_program.to_account_info(),
-                    associated_token_program: ctx.accounts.associated_token_program.to_account_info(),
-                    rent: ctx.accounts.rent.to_account_info(),
-                }
-            )
-        )?.get();
+        let stake_fee = ctx.accounts.fee_vault.stake_fee;
+
+        if stake_fee > 0 {
+            system_program::transfer(
+                CpiContext::new(
+                    ctx.accounts.system_program.to_account_info(),
+                    system_program::Transfer {
+                        from: ctx.accounts.staker.to_account_info(),
+                        to: ctx.accounts.fee_wallet.to_account_info(),
+                    },
+                ),
+                stake_fee,
+            )?;
+        }
+
+        let amount = claim_jewels(CpiContext::new(
+            ctx.accounts.emperor_program.to_account_info(),
+            ClaimJewels {
+                signer: ctx.accounts.staker.to_account_info(),
+                staker: ctx.accounts.staker.to_account_info(),
+                staker_account: ctx.accounts.staker_account.to_account_info(),
+                vault: ctx.accounts.emperor_vault.to_account_info(),
+                reward_token_mint: ctx.accounts.stake_token_mint.to_account_info(),
+                staker_ata: ctx.accounts.staker_ata.to_account_info(),
+                reward_token_vault_ata: ctx.accounts.reward_token_vault_ata.to_account_info(),
+                system_program: ctx.accounts.system_program.to_account_info(),
+                token_program: ctx.accounts.token_program.to_account_info(),
+                associated_token_program: ctx.accounts.associated_token_program.to_account_info(),
+                rent: ctx.accounts.rent.to_account_info(),
+            },
+        ))?
+        .get();
 
         vault.stake(ctx.accounts.staker.key(), amount);
 
@@ -149,6 +174,22 @@ pub mod spl_staking {
 
     pub fn unstake(ctx: Context<Unstake>, amount: u64) -> Result<()> {
         let mut vault = ctx.accounts.vault.load_mut()?;
+
+        let unstake_fee = ctx.accounts.fee_vault.unstake_fee;
+
+        if unstake_fee > 0 {
+            system_program::transfer(
+                CpiContext::new(
+                    ctx.accounts.system_program.to_account_info(),
+                    system_program::Transfer {
+                        from: ctx.accounts.staker.to_account_info(),
+                        to: ctx.accounts.fee_wallet.to_account_info(),
+                    },
+                ),
+                unstake_fee,
+            )?;
+        }
+
         let bump = vault.bump;
         let vault_bump = bump;
         let seeds = [b"vault".as_ref(), &[vault_bump]];
@@ -204,6 +245,36 @@ pub mod spl_staking {
             .checked_add(source_account_info.lamports())
             .unwrap();
         **source_account_info.lamports.borrow_mut() = 0;
+
+        Ok(())
+    }
+
+    pub fn initialize_fee_vault(
+        ctx: Context<InitializeFeeVault>,
+        fee_wallet: Pubkey,
+        stake_fee: u64,
+        unstake_fee: u64,
+    ) -> Result<()> {
+        let fee_vault = &mut ctx.accounts.fee_vault;
+        fee_vault.bump = *ctx.bumps.get("fee_vault").unwrap();
+        fee_vault.fee_wallet = fee_wallet;
+        fee_vault.stake_fee = stake_fee;
+        fee_vault.unstake_fee = unstake_fee;
+        fee_vault.authority = ctx.accounts.vault.load()?.authority;
+
+        Ok(())
+    }
+
+    pub fn update_fee_vault(
+        ctx: Context<UpdateFeeVault>,
+        fee_wallet: Pubkey,
+        stake_fee: u64,
+        unstake_fee: u64,
+    ) -> Result<()> {
+        let fee_vault = &mut ctx.accounts.fee_vault;
+        fee_vault.fee_wallet = fee_wallet;
+        fee_vault.stake_fee = stake_fee;
+        fee_vault.unstake_fee = unstake_fee;
 
         Ok(())
     }
