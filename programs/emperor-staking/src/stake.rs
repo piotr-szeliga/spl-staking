@@ -248,11 +248,6 @@ fn update_accounts(
       reward_rate: vault.payout_amount,
       staked_time: now,
     };
-    
-    staker_account.total_reward_rate = staker_account.total_reward_rate.checked_add(
-      vault.payout_amount
-    ).unwrap();
-
   }
   /*
    * User Is Unstaking
@@ -267,11 +262,5 @@ fn update_accounts(
     // Remove NFT that is being unstaked.
     staker_account.staked_items[index] = staker_account.staked_items[last_index];
     staker_account.staked_items[last_index] = StakedNft::default();
-
-    staker_account.total_reward_rate = staker_account.total_reward_rate.checked_sub(
-      vault.payout_amount
-    ).unwrap();
-
-    msg!("Total Reward Rate: {:?}", staker_account.total_reward_rate);
   }
 }

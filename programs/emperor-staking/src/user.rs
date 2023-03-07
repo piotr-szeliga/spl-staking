@@ -94,7 +94,8 @@ pub fn get_rewards_earned(
   let time_from_last_stake_in_seconds = current_time.checked_sub(last_update_time).unwrap();
   
   let total_amount_earned = time_from_last_stake_in_seconds
-    .checked_mul(staker_account.total_reward_rate).unwrap()
+    .checked_mul(staker_account.mint_staked_count as u64).unwrap()
+    .checked_mul(vault.payout_amount).unwrap()
     .checked_div(vault.payout_interval).unwrap();
   
   return total_amount_earned;

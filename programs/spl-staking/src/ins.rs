@@ -19,6 +19,7 @@ pub struct InitializeVault<'info> {
     #[account(
         seeds = [
             b"vault".as_ref(),
+            vault.key().as_ref(),
         ],
         bump,
     )]
@@ -54,6 +55,7 @@ pub struct UpdateVault<'info> {
     #[account(
         seeds = [
             b"vault".as_ref(),
+            vault.key().as_ref(),
         ],
         bump = vault.load()?.bump,
     )]
@@ -89,6 +91,7 @@ pub struct Fund<'info> {
     #[account(
         seeds = [
             b"vault".as_ref(),
+            vault.key().as_ref(),
         ],
         bump = vault.load()?.bump,
     )]
@@ -132,6 +135,7 @@ pub struct Withdraw<'info> {
     #[account(
         seeds = [
             b"vault".as_ref(),
+            vault.key().as_ref(),
         ],
         bump = vault.load()?.bump,
     )]
@@ -179,6 +183,7 @@ pub struct Stake<'info> {
     #[account(
         seeds = [
             b"vault".as_ref(),
+            vault.key().as_ref(),
         ],
         bump = vault.load()?.bump,
     )]
@@ -246,6 +251,7 @@ pub struct StakeWithClaim<'info> {
     #[account(
         seeds = [
             b"vault".as_ref(),
+            vault.key().as_ref(),
         ],
         bump = vault.load()?.bump,
     )]
@@ -301,6 +307,7 @@ pub struct Unstake<'info> {
     #[account(
         seeds = [
             b"vault".as_ref(),
+            vault.key().as_ref(),
         ],
         bump = vault.load()?.bump,
     )]
@@ -336,6 +343,7 @@ pub struct Claim<'info> {
     #[account(
         seeds = [
             b"vault".as_ref(),
+            vault.key().as_ref(),
         ],
         bump = vault.load()?.bump,
     )]

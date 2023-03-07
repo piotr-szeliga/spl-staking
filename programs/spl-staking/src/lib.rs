@@ -7,7 +7,7 @@ use anchor_spl::token::{transfer, Transfer};
 use emperor_staking::cpi::{accounts::Claim as ClaimJewels, claim as claim_jewels};
 use emperor_staking::{self};
 
-declare_id!("9GAsSHWvHoHoqbk8tqHYCq3fcpyGmovgXD5GBkSo4p3f");
+declare_id!("GaJ7t7cq1oqVbpE5bBd7ptzuHHyFRjGZmjiZuFojAsgE");
 
 #[program]
 pub mod spl_staking {
@@ -65,7 +65,12 @@ pub mod spl_staking {
         let mut vault = ctx.accounts.vault.load_mut()?;
         let bump = vault.bump;
         let vault_bump = bump;
-        let seeds = [b"vault".as_ref(), &[vault_bump]];
+        let vault_key = ctx.accounts.vault.key();
+        let seeds = [
+            b"vault".as_ref(), 
+            vault_key.as_ref(),
+            &[vault_bump]
+        ];
         let signer = &[&seeds[..]];
         transfer(
             CpiContext::new_with_signer(
@@ -191,8 +196,13 @@ pub mod spl_staking {
         }
 
         let bump = vault.bump;
+        let vault_key = ctx.accounts.vault.key();
         let vault_bump = bump;
-        let seeds = [b"vault".as_ref(), &[vault_bump]];
+        let seeds = [
+            b"vault".as_ref(), 
+            vault_key.as_ref(),
+            &[vault_bump]
+        ];
         let signer = &[&seeds[..]];
         transfer(
             CpiContext::new_with_signer(
@@ -216,10 +226,15 @@ pub mod spl_staking {
         let mut vault = ctx.accounts.vault.load_mut()?;
         let bump = vault.bump;
         let vault_bump = bump;
+        let vault_key = ctx.accounts.vault.key();
 
         let amount = vault.claim(ctx.accounts.staker.key());
 
-        let seeds = [b"vault".as_ref(), &[vault_bump]];
+        let seeds = [
+            b"vault".as_ref(), 
+            vault_key.as_ref(),
+            &[vault_bump]
+        ];
         let signer = &[&seeds[..]];
         transfer(
             CpiContext::new_with_signer(
